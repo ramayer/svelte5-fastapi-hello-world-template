@@ -24,12 +24,19 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = []
+dependencies = [
+   "fastapi",
+   "uvicorn",
+]
+
+[project.scripts]
+backend = "backend.app.main:run"
 
 [project.urls]
 Documentation = "https://github.com/Ron M/backend#readme"
 Issues = "https://github.com/Ron M/backend/issues"
 Source = "https://github.com/Ron M/backend"
+
 
 [tool.hatch.version]
 path = "src/backend/__about__.py"
