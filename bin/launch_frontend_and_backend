@@ -1,0 +1,6 @@
+#!/usr/bin/bash
+
+(cd frontend; npm run dev) &
+(cd backend; hatch run uvicorn backend.app.main:app --reload) &
+
+wait
