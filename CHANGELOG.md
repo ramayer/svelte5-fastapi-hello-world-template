@@ -25,4 +25,7 @@
     * `hatch run uvicorn backend.app.main:app --reload`
     * `hatch run backend`
 
+* Added command line scripts in /bin to launch and test the frontend and backend
+
+* Added github actions to run the tests.
 

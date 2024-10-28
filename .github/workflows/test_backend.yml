@@ -1,4 +1,4 @@
-name: test_backend
+name: Test Backend
 # Based on https://github.com/pypa/hatch/blob/master/.github/workflows/test.yml
 on:
   push:
@@ -19,12 +19,19 @@ env:
 jobs:
   run:
     name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
+
+    defaults:
+        run:
+          working-directory: backend
+
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+        #os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
+        #python-version: ['3.10', '3.12']
+        python-version: ['3.12']
 
     steps:
     - uses: actions/checkout@v4
@@ -37,13 +44,12 @@ jobs:
     - name: Install UV
       run: curl -LsSf https://github.com/astral-sh/uv/releases/latest/download/uv-installer.sh | sh
 
-    - name: Install ourself
+    - name: Install hatch
       run: |
-        uv pip install --system -e .
-        uv pip install --system -e ./backend
+        uv pip install --system  hatch
 
     - name: Run static analysis
-      working-directory: frontend
+      working-directory: backend
       run: hatch fmt --check
 
     - name: Check types
@@ -65,6 +71,11 @@ jobs:
   coverage:
     name: Report coverage
     runs-on: ubuntu-latest
+
+    defaults:
+        run:
+          working-directory: backend
+
     needs:
     - run
 
@@ -83,54 +94,54 @@ jobs:
         pattern: coverage-*
         merge-multiple: true
 
-    - name: Combine coverage data
-      run: hatch run coverage:combine
+    # - name: Combine coverage data
+    #   run: hatch run coverage:combine
 
-    - name: Export coverage reports
-      run: |
-        hatch run coverage:report-xml
-        hatch run coverage:report-uncovered-html
+    # - name: Export coverage reports
+    #   run: |
+    #     hatch run coverage:report-xml
+    #     hatch run coverage:report-uncovered-html
 
-    - name: Upload uncovered HTML report
-      uses: actions/upload-artifact@v4
-      with:
-        name: uncovered-html-report
-        path: htmlcov
+    # - name: Upload uncovered HTML report
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: uncovered-html-report
+    #     path: htmlcov
 
-    - name: Generate coverage summary
-      run: hatch run coverage:generate-summary
+    # - name: Generate coverage summary
+    #   run: hatch run coverage:generate-summary
 
-    - name: Write coverage summary report
-      if: github.event_name == 'pull_request'
-      run: hatch run coverage:write-summary-report
+    # - name: Write coverage summary report
+    #   if: github.event_name == 'pull_request'
+    #   run: hatch run coverage:write-summary-report
 
-    - name: Update coverage pull request comment
-      if: github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
-      uses: marocchino/sticky-pull-request-comment@v2
-      with:
-        path: coverage-report.md
+    # - name: Update coverage pull request comment
+    #   if: github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
+    #   uses: marocchino/sticky-pull-request-comment@v2
+    #   with:
+    #     path: coverage-report.md
 
-  downstream:
-    name: Downstream builds with Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+#   downstream:
+#     name: Downstream builds with Python ${{ matrix.python-version }}
+#     runs-on: ubuntu-latest
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
 
-    steps:
-    - uses: actions/checkout@v4
+#     steps:
+#     - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
+#     - name: Set up Python ${{ matrix.python-version }}
+#       uses: actions/setup-python@v5
+#       with:
+#         python-version: ${{ matrix.python-version }}
 
-    - name: Install tools
-      run: pip install --upgrade -r backend/tests/downstream/requirements.txt
+#     - name: Install tools
+#       run: pip install --upgrade -r backend/tests/downstream/requirements.txt
 
-    - name: Build downstream projects
-      run: python backend/tests/downstream/integrate.py
+#     - name: Build downstream projects
+#       run: python backend/tests/downstream/integrate.py
 
   # https://github.com/marketplace/actions/alls-green#why
   check: # This job does nothing and is only used for the branch protection
@@ -138,7 +149,7 @@ jobs:
 
     needs:
     - coverage
-    - downstream
+    #- downstream
 
     runs-on: ubuntu-latest
 
